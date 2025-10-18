@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sua Vocação Astrológica - Resultados</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      background-color: #4a148c;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    .results-container {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .profile-info {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .vocacao-principal {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4a148c;
+      margin: 20px 0;
+    }
+    .vocacao-descricao {
+      line-height: 1.6;
+    }
+    .chart-container {
+      margin-top: 30px;
+    }
+    .btn {
+      background-color: #4a148c;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background-color: #6a1b9a;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Astro Profissões</h1>
+    <p>Sua Vocação Profissional Astrológica</p>
+  </header>
+  
+  <div class="container">
+    <div class="results-container">
+      <div class="profile-info">
+        <h2>Perfil Astrológico de <span id="nome-usuario">Carregando...</span></h2>
+        <p>Data de Nascimento: <span id="data-nascimento">Carregando...</span></p>
+        <p>Horário de Nascimento: <span id="horario-nascimento">Carregando...</span></p>
+        <p>Localização: <span id="localizacao">Carregando...</span></p>
+      </div>
+      
+      <h3>Sua Vocação Principal:</h3>
+      <div class="vocacao-principal" id="vocacao-principal">Analisando seu mapa astral...</div>
+      
+      <div class="vocacao-descricao" id="vocacao-descricao">
+        Estamos processando seu mapa astral para determinar sua vocação profissional com base nos aspectos planetários e posições astrológicas no momento do seu nascimento.
+      </div>
+      
+      <div class="chart-container" id="chart-container">
+        <!-- Aqui será exibido o gráfico do mapa astral -->
+      </div>
+      
+      <a href="index.html" class="btn">Voltar ao Início</a>
+    </div>
+  </div>
+
+  <script>
+    // Recuperar os dados da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const nome = urlParams.get('nome');
+    const dataNascimento = urlParams.get('data_nascimento');
+    const horarioNascimento = urlParams.get('horario_nascimento');
+    const latitude = urlParams.get('latitude');
+    const longitude = urlParams.get('longitude');
+    
+    // Preencher os dados do perfil
+    document.getElementById('nome-usuario').textContent = nome || 'Usuário';
+    document.getElementById('data-nascimento').textContent = dataNascimento || 'Não informado';
+    document.getElementById('horario-nascimento').textContent = horarioNascimento || 'Não informado';
+    document.getElementById('localizacao').textContent = `Lat: ${latitude || 'N/A'}, Long: ${longitude || 'N/A'}`;
+    
+    // Simular o carregamento da vocação (em um sistema real, isso viria do backend)
+    setTimeout(() => {
+      const vocacoes = [
+        'Comunicador(a) / Jornalista',
+        'Empreendedor(a) / Líder',
+        'Artista / Designer',
+        'Cientista / Pesquisador(a)',
+        'Educador(a) / Professor(a)',
+        'Curador(a) / Profissional de Saúde',
+        'Analista Financeiro(a) / Contador(a)',
+        'Conselheiro(a) / Psicólogo(a)'
+      ];
+      
+      const descricoes = [
+        'Você tem um dom natural para comunicação e expressão. Sua capacidade de articular ideias e conectar-se com as pessoas faz de você um excelente comunicador. Profissões relacionadas ao jornalismo, marketing, relações públicas ou qualquer área que envolva transmitir informações seriam ideais para você.',
+        'Seu mapa astral revela uma forte capacidade de liderança e visão estratégica. Você tem a habilidade natural de inspirar os outros e transformar ideias em realidade. Empreendedorismo, gestão de equipes ou posições de liderança em organizações seriam caminhos profissionais alinhados com seu potencial.',
+        'Sua sensibilidade e criatividade são seus maiores dons. Você enxerga o mundo através de uma lente única e tem a capacidade de transformar emoções em expressões artísticas. Artes visuais, design, música, dança ou qualquer profissão que permita sua expressão criativa seria ideal para você.',
+        'Sua mente analítica e curiosidade natural o tornam um excelente pesquisador. Você tem a capacidade de mergulhar profundamente em temas complexos e encontrar soluções inovadoras. Áreas científicas, tecnológicas ou acadêmicas seriam campos onde seu potencial brilharia.',
+        'Você tem um dom natural para compartilhar conhecimento e inspirar os outros a aprender. Sua paciência e clareza na comunicação fazem de você um educador nato. Profissões relacionadas ao ensino, treinamento ou mentoria seriam ideais para você.',
+        'Seu mapa astral revela uma forte empatia e desejo de ajudar os outros. Você tem uma sensibilidade especial para compreender o sofrimento alheio e oferecer suporte. Profissões na área da saúde, terapias alternativas ou trabalho social seriam caminhos alinhados com sua essência.',
+        'Você tem uma mente estruturada e excelente com números e detalhes. Sua capacidade de organização e precisão o torna ideal para lidar com finanças e análises detalhadas. Contabilidade, análise financeira ou gestão de recursos seriam áreas onde seu potencial seria bem aproveitado.',
+        'Sua intuição e capacidade de compreender as complexidades da mente humana são extraordinárias. Você tem um dom natural para ouvir e aconselhar os outros em momentos difíceis. Psicologia, coaching ou aconselhamento seriam profissões que utilizariam seus dons naturais.'
+      ];
+      
+      // Escolher uma vocação aleatória (em um sistema real, isso seria baseado na análise do mapa astral)
+      const indice = Math.floor(Math.random() * vocacoes.length);
+      
+      document.getElementById('vocacao-principal').textContent = vocacoes[indice];
+      document.getElementById('vocacao-descricao').textContent = descricoes[indice];
+      
+      // Adicionar um gráfico simples (placeholder)
+      document.getElementById('chart-container').innerHTML = `
+        <h3>Aspectos Astrológicos Relevantes:</h3>
+        <p>Sol em Leão: Liderança e criatividade</p>
+        <p>Lua em Peixes: Intuição e sensibilidade</p>
+        <p>Mercúrio em Virgem: Análise e comunicação precisa</p>
+        <p>Vênus em Libra: Harmonia e senso estético</p>
+        <p>Marte em Escorpião: Determinação e foco intenso</p>
+      `;
+    }, 1500);
+  </script>
+</body>
+</html>

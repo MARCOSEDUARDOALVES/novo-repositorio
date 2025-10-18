@@ -1,0 +1,25 @@
+[core]
+    autocrlf = true
+    safecrlf = warn
+    editor = code --wait
+
+[user]
+    # Substitua com suas informações
+    name = Seu Nome
+    email = seu.email@exemplo.com
+
+[alias]
+    st = status
+    ci = commit
+    co = checkout
+    br = branch
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+
+[color]
+    ui = auto
+
+[pull]
+    rebase = false
+
+[init]
+    defaultBranch = main
