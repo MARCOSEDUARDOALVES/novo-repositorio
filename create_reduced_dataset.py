@@ -1,22 +1,50 @@
-import pandas as pd
+"""Create a reduced Pantheon dataset that feeds the feature generator."""
 
-# Caminho para o arquivo CSV original
-input_file = 'pantheon_cleaned_data.csv'
-# Caminho para o novo arquivo CSV com 1000 registros
-output_file = 'pantheon_reduced_1000.csv'
+from pathlib import Path
+import shutil
 
-try:
-    # Ler o arquivo CSV original
-    df = pd.read_csv(input_file)
-    
-    # Selecionar os primeiros 1000 registros
-    df_reduced = df.head(1000)
-    
-    # Salvar o subconjunto em um novo arquivo CSV
-    df_reduced.to_csv(output_file, index=False)
-    
-    print(f"Subconjunto de 1000 registros criado com sucesso em {output_file}")
-except FileNotFoundError:
-    print(f"Erro: O arquivo {input_file} não foi encontrado.")
-except Exception as e:
-    print(f"Ocorreu um erro: {e}")
+import logging
+
+try:  # pragma: no cover - dependência opcional
+    import pandas as pd
+except ImportError:  # pragma: no cover - dependência opcional
+    pd = None
+
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+BASE_DIR = Path(__file__).resolve().parent
+
+INPUT_FILE = BASE_DIR / "pantheon_cleaned_data.csv"
+SAMPLE_FILE = BASE_DIR / "data" / "sample_pantheon_cleaned_data.csv"
+OUTPUT_FILE = BASE_DIR / "pantheon_reduced_1000.csv"
+
+MAX_RECORDS = 1000
+
+
+def main() -> None:
+    if pd is None:
+        logging.warning(
+            "Pandas não está disponível. Copiando subconjunto de amostra para %s.", OUTPUT_FILE
+        )
+        shutil.copyfile(SAMPLE_FILE, OUTPUT_FILE)
+        return
+
+    if INPUT_FILE.exists():
+        logging.info("Carregando dados limpos de %s", INPUT_FILE)
+        df = pd.read_csv(INPUT_FILE)
+    else:
+        logging.warning(
+            "Arquivo %s não encontrado. Utilizando amostra em %s.", INPUT_FILE.name, SAMPLE_FILE
+        )
+        df = pd.read_csv(SAMPLE_FILE)
+
+    df_reduced = df.head(MAX_RECORDS)
+    df_reduced.to_csv(OUTPUT_FILE, index=False)
+    logging.info(
+        "Subconjunto com até %s registros salvo em %s", MAX_RECORDS, OUTPUT_FILE
+    )
+
+
+if __name__ == "__main__":
+    main()

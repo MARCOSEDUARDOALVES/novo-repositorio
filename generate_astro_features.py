@@ -1,18 +1,35 @@
-import pandas as pd
-from immanuel import charts
+"""Generate (or load) astrological features for the ML pipeline."""
+
 from datetime import datetime
+from pathlib import Path
+import shutil
+
 import json
 import logging
 import traceback
-import swisseph as swe # Importar swisseph para capturar o erro específico
 
-# Configure logging
+try:  # pragma: no cover - dependência opcional
+    import pandas as pd
+except ImportError:  # pragma: no cover - dependência opcional
+    pd = None
+
+try:  # pragma: no cover - dependências opcionais
+    from immanuel import charts
+    import swisseph as swe  # type: ignore
+except ImportError:  # pragma: no cover - dependências opcionais
+    charts = None  # type: ignore
+    swe = None  # type: ignore
+
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-# Caminho para o arquivo CSV reduzido
-input_file = 'pantheon_reduced_1000.csv'
-# Caminho para o arquivo de saída com as características astrológicas
-output_file = 'astrological_features.csv'
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+
+INPUT_FILE = BASE_DIR / "pantheon_reduced_1000.csv"
+SAMPLE_INPUT_FILE = DATA_DIR / "sample_pantheon_reduced_1000.csv"
+OUTPUT_FILE = BASE_DIR / "astrological_features.csv"
+SAMPLE_OUTPUT_FILE = DATA_DIR / "sample_astrological_features.csv"
 
 def get_astrological_data(row):
     features = {
@@ -91,7 +108,7 @@ def get_astrological_data(row):
             # logging.debug("  MC not found or is None.")
 
         return features
-    except swe.Error as se:
+    except swe.Error as se:  # type: ignore[attr-defined]
         logging.warning(f"Erro swisseph ao processar {row['name']}: {se}. Ignorando este registro.")
         return None
     except Exception as e:
@@ -99,23 +116,48 @@ def get_astrological_data(row):
         logging.error(traceback.format_exc())
         return None
 
-# Carregar o conjunto de dados reduzido
-df_reduced = pd.read_csv(input_file)
+def _copy_sample_output() -> None:
+    logging.info("Carregando características astrológicas de amostra em %s", OUTPUT_FILE)
+    if pd is not None:
+        sample_df = pd.read_csv(SAMPLE_OUTPUT_FILE)
+        sample_df.to_csv(OUTPUT_FILE, index=False)
+    else:
+        shutil.copyfile(SAMPLE_OUTPUT_FILE, OUTPUT_FILE)
 
-# Lista para armazenar os dicionários de características
-astro_data_list = []
 
-# Iterar sobre as linhas do DataFrame e coletar os dados
-for index, row in df_reduced.iterrows():
-    data = get_astrological_data(row)
-    if data:
-        astro_data_list.append(data)
+def main() -> None:
+    if charts is None or swe is None or pd is None:
+        logging.warning(
+            "Dependências opcionais ausentes. Utilizando dados de amostra."
+        )
+        _copy_sample_output()
+        return
 
-# Converter a lista de dicionários em um DataFrame
-if astro_data_list:
-    astro_features_df = pd.DataFrame(astro_data_list)
-    astro_features_df.to_csv(output_file, index=False)
-    logging.info(f"Características astrológicas geradas e salvas em {output_file}")
-else:
-    logging.warning("Nenhuma característica astrológica foi gerada.")
+    source_file = INPUT_FILE if INPUT_FILE.exists() else SAMPLE_INPUT_FILE
+    if source_file == SAMPLE_INPUT_FILE:
+        logging.warning(
+            "Arquivo %s não encontrado. Utilizando entrada de amostra %s.", INPUT_FILE.name, source_file
+        )
+    else:
+        logging.info("Carregando dados reduzidos de %s", source_file)
+
+    df_reduced = pd.read_csv(source_file)
+
+    astro_data_list = []
+    for _, row in df_reduced.iterrows():
+        data = get_astrological_data(row)
+        if data:
+            astro_data_list.append(data)
+
+    if astro_data_list:
+        astro_features_df = pd.DataFrame(astro_data_list)
+        astro_features_df.to_csv(OUTPUT_FILE, index=False)
+        logging.info("Características astrológicas geradas e salvas em %s", OUTPUT_FILE)
+    else:
+        logging.warning("Nenhuma característica astrológica foi gerada; carregando dados de amostra.")
+        _copy_sample_output()
+
+
+if __name__ == "__main__":
+    main()
 
