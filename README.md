@@ -1,9 +1,4 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/README.md b/README.md
-index 9c63e370b599cb3fee7b9d28c40adb8d7775b28c..815fbbd5b9bda4d9d1474eec5a19f1d0c950b34e 100644
---- a/README.md
-+++ b/README.md
-@@ -13,28 +13,99 @@ Para utilizar o controle de versão Git neste projeto, siga os passos abaixo:
+Para utilizar o controle de versão Git neste projeto, siga os passos abaixo:
     Após a instalação, abra o terminal e configure suas informações:
     ```
     git config --global user.name "Seu Nome"
