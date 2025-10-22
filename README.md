@@ -28,6 +28,146 @@ Para utilizar o controle de versão Git neste projeto, siga os passos abaixo:
    git commit -m "Commit inicial"
    ```
 
+5. **Conecte ao GitHub**:
+   - Crie (ou localize) o repositório remoto e copie a URL HTTPS.
+   - Adicione o remoto `origin`:
+     ```
+     git remote add origin https://github.com/SEU_USUARIO/SEU_REPO.git
+     ```
+   - Verifique com `git remote -v` se a URL está configurada.
+   - Envie a branch atual e registre o upstream:
+     ```
+     git push -u origin work
+     ```
+   - Se estiver rodando em um ambiente restrito (como este sandbox do Codex), operações de rede podem falhar com erro `CONNECT tunnel failed, response 403`. Nesse caso, faça o `git push` a partir da sua máquina local: copie o repositório para o computador, adicione o mesmo remoto e execute os comandos acima com suas credenciais.
+
+## Sequência rápida de comandos (Git Bash)
+
+Os passos abaixo já estão ajustados para o seu repositório
+`https://github.com/MARCOSEDUARDOALVES/novo-repositorio` e podem ser
+copiados diretamente para o Git Bash:
+
+```bash
+# 1. (Opcional) Crie uma pasta de trabalho e acesse-a
+mkdir -p ~/Downloads/novo-repositorio-transfer && cd ~/Downloads/novo-repositorio-transfer
+
+# 2. Converta o bundle Base64 que você copiou do Codex
+base64 -d work.bundle.b64.txt > work.bundle
+
+# 3. Restaure o histórico da branch work a partir do bundle
+git clone work.bundle novo-repositorio
+cd novo-repositorio
+git checkout work
+
+# 4. Conecte ao seu GitHub e envie a branch
+git remote add origin https://github.com/MARCOSEDUARDOALVES/novo-repositorio.git
+git push -u origin work
+
+# 5. (Depois de novas alterações) Comitar e publicar novamente
+git add .
+git commit -m "Mensagem explicando a atualização"
+git push
+```
+
+Esses comandos assumem que o arquivo `work.bundle.b64.txt` (ou o texto
+copiado entre os marcadores `BEGIN/END REPO BUNDLE`) já está na pasta
+em que você abriu o Git Bash. Caso tenha baixado também o
+`worktree_snapshot.zip`, extraia-o após o `git checkout work` com
+`unzip worktree_snapshot.zip -d .`.
+
+### Passo a passo no Git Bash para atualizar o GitHub
+
+Quando já existir um repositório no GitHub (por exemplo, `https://github.com/MARCOSEDUARDOALVES/novo-repositorio`), siga esta sequência **no Git Bash do seu computador** para enviar a branch `work` que veio do Codex:
+
+1. Posicione-se na pasta onde deseja restaurar o projeto e cole o bundle transferido do Codex:
+   ```bash
+   base64 -d work.bundle.b64.txt > work.bundle
+   git clone work.bundle novo-repositorio
+   cd novo-repositorio
+   git checkout work
+   ```
+2. Conecte o repositório local ao GitHub:
+   ```bash
+   git remote add origin https://github.com/MARCOSEDUARDOALVES/novo-repositorio.git
+   git remote -v
+   ```
+   - Confirme que a URL correta aparece para `origin` em `fetch` e `push`.
+3. Envie tudo para o GitHub e defina o *upstream* da branch `work`:
+   ```bash
+   git push -u origin work
+   ```
+4. A partir daí, sempre que fizer novas alterações no seu computador, basta repetir:
+   ```bash
+   git add .
+   git commit -m "Mensagem explicando a atualização"
+   git push
+   ```
+
+Esse fluxo garante que todo o histórico produzido aqui seja recriado localmente e enviado ao GitHub usando apenas comandos do Git Bash.
+
+### Se o GitHub mostrar "O Codex atualmente não permite atualizar PRs"
+
+Algumas vezes, ao abrir um Pull Request criado a partir deste ambiente, o botão
+**Update branch** no GitHub exibe a mensagem:
+
+> `O Codex atualmente não permite atualizar PRs que foram modificados fora dele. Por enquanto, crie um novo PR.`
+
+Essa é uma limitação da plataforma: o histórico gerado aqui precisa ser enviado
+do **seu computador** e um novo PR deve ser criado manualmente. Para atualizar a
+branch mesmo assim:
+
+1. Siga o passo a passo acima para restaurar o bundle no Git Bash e execute `git push -u origin work`.
+2. No GitHub, acesse o repositório (`https://github.com/MARCOSEDUARDOALVES/novo-repositorio`).
+3. Clique em **Pull requests ▸ New pull request**.
+4. Garanta que o campo **base** esteja em `main` (ou na branch de destino desejada) e **compare** em `work`.
+5. Revise o diff, escreva o título/descrição e finalize com **Create pull request**.
+
+Após esse push feito a partir da sua máquina, a branch `work` estará atualizada
+no GitHub, e o novo PR refletirá todos os commits vindos do Codex. Caso existisse
+um PR anterior aberto pelo sandbox, você pode fechá-lo ou mantê-lo apenas como
+histórico.
+
+## Exportar o repositório quando o push não funciona
+
+Caso não consiga baixar os arquivos diretamente ou conectar-se ao GitHub a partir do sandbox, gere um pacote completo da branch `work` com:
+
+```bash
+python export_repository_bundle.py --skip-zip --print-base64 --base64-output transfer/work.bundle.b64.txt
+```
+
+O script cria arquivos na pasta `transfer/`:
+
+- `transfer/work.bundle`: contém todo o histórico Git (commits, branches, tags). 
+- `transfer/work.bundle.b64.txt`: texto pronto para ser copiado/transferido caso você só possa mover conteúdo via copiar/colar. Este arquivo já está versionado no repositório para facilitar o download direto.
+- (Opcional) `transfer/worktree_snapshot.zip`: remova o parâmetro `--skip-zip` se quiser gerar também o snapshot da árvore de trabalho.
+
+Se não for possível baixar os arquivos produzidos, utilize o arquivo `transfer/work.bundle.b64.txt` (ou copie o bloco Base64 exibido pelo script) e converta com `base64 -d`. Em seguida, você pode clonar a partir do bundle e enviar tudo para o GitHub normalmente. Consulte `transfer/README.md` para ver o passo a passo completo de restauração.
+
+### Passo a passo rápido para restaurar no seu computador
+
+1. **Use o arquivo Base64 pronto** (`transfer/work.bundle.b64.txt`) ou copie manualmente a saída mostrada entre os marcadores `-----BEGIN REPO BUNDLE-----` e `-----END REPO BUNDLE-----` para um arquivo local.
+2. **Converta o arquivo** para o formato binário do bundle:
+   ```bash
+   base64 -d work.bundle.b64.txt > work.bundle
+   ```
+3. **Clone o bundle** para reconstruir o histórico da branch `work`:
+   ```bash
+   git clone work.bundle novo-repositorio
+   cd novo-repositorio
+   git checkout work
+   ```
+4. **(Opcional) Restaure o snapshot da árvore de trabalho** caso tenha copiado também `transfer/worktree_snapshot.zip`:
+   ```bash
+   unzip worktree_snapshot.zip -d novo-repositorio
+   ```
+5. **Conecte ao seu GitHub e envie os commits**:
+   ```bash
+   git remote add origin https://github.com/MARCOSEDUARDOALVES/novo-repositorio.git
+   git push -u origin work
+   ```
+
+Esses passos garantem que todo o histórico produzido aqui no Codex seja recriado no seu computador e enviado ao GitHub mesmo que o sandbox não consiga se comunicar diretamente com o serviço remoto.
+
 ## Estrutura do Projeto
 
 Este projeto contém:
@@ -35,6 +175,93 @@ Este projeto contém:
 - Interface web em React (App.jsx)
 - Ferramentas para análise de dados
 
-## Como Executar o Projeto
+## Dados de exemplo incluídos
 
-[Adicione instruções específicas para executar seu projeto aqui]
+Para facilitar a execução local sem necessidade de baixar bases externas, o repositório inclui um conjunto pequeno de dados astrológicos fictícios na pasta `data/`. Esses arquivos permitem percorrer todo o pipeline mesmo em ambientes sem acesso à internet ou sem bibliotecas científicas instaladas.
+
+Principais arquivos de exemplo:
+
+| Arquivo | Descrição |
+| --- | --- |
+| `data/sample_person_2025_update.csv` | Amostra com dados biográficos básicos (nome, ocupação, data e local de nascimento). |
+| `data/sample_pantheon_cleaned_data.csv` | Versão higienizada pronta para criação do subconjunto reduzido. |
+| `data/sample_astrological_features.csv` | Características astrológicas já calculadas (signo, casa, elemento, modalidade, aspectos, graus, dispositores tradicional/moderno **e métricas de temperamento**) para seis personalidades. |
+| `data/sample_prepared_ml_data.csv` | Base vetorizada pronta para treinamento do modelo, incluindo os vetores derivados dos graus planetários, dispositores e agregados de temperamento. |
+| `data/sample_model_metrics.json` | Métricas de referência para o modelo de amostra utilizado nas saídas offline. |
+
+Os scripts Python detectam automaticamente essas amostras quando os arquivos reais não estão presentes ou quando dependências (como `pandas`, `scikit-learn`, `immanuel` ou `swisseph`) não estão instaladas. Dessa forma, a execução gera/copias os resultados a partir das amostras mantendo a experiência consistente.
+
+## Como Executar o Pipeline de Machine Learning
+
+1. **Limpeza dos dados brutos**
+   ```bash
+   python process_pantheon_data.py
+   ```
+   - Se `pandas` estiver instalado e o arquivo `person_2025_update.csv` existir, o script limpará os dados reais e salvará `pantheon_cleaned_data.csv`.
+   - Caso contrário, a versão de amostra (`data/sample_pantheon_cleaned_data.csv`) será copiada automaticamente para o local esperado.
+
+2. **Criação do subconjunto reduzido**
+   ```bash
+   python create_reduced_dataset.py
+   ```
+   - Com dependências disponíveis, será gerado `pantheon_reduced_1000.csv`.
+   - Sem dependências, a amostra correspondente é reutilizada.
+
+3. **Geração de características astrológicas**
+   ```bash
+   python generate_astro_features.py
+   ```
+   - Se `immanuel`, `swisseph` e `pandas` estiverem presentes, as cartas natais são calculadas.
+   - Do contrário, `astrological_features.csv` é preenchido com os dados de amostra.
+   - A saída inclui, para cada planeta pessoal e transpessoal, o signo, a casa, o elemento, a modalidade, a contagem de aspectos, **o grau e os dispositores tradicional e moderno** — recursos inspirados em autores clássicos e contemporâneos para identificar o propósito individual.
+
+4. **Preparação dos dados para ML**
+   ```bash
+   python prepare_ml_data.py
+   ```
+   - Com `pandas` e `scikit-learn`, ocorre a vetorização e geração de `prepared_ml_data.csv` + `occupation_label_mapping.json`.
+   - Sem esses pacotes, os arquivos prontos são copiados de `data/`.
+
+5. **Treinamento (ou carregamento) do modelo**
+   ```bash
+   python develop_ml_model.py
+   ```
+   - Quando todas as dependências estão disponíveis, um `RandomForestClassifier` é treinado e salvo em `random_forest_model.pkl`.
+   - Na ausência de bibliotecas de ML, o script gera um modelo fictício (`random_forest_model.pkl`) contendo apenas metadados e reutiliza as métricas de `data/sample_model_metrics.json` e o relatório de classificação de amostra.
+
+> **Dica:** os arquivos `astrological_features.csv` e `prepared_ml_data.csv` já estão versionados na raiz do projeto para uso imediato. O arquivo `random_forest_model.pkl` é gerado sob demanda pelo script para evitar problemas com anexos binários em provedores Git.
+
+### Parâmetros astrológicos considerados
+
+O pipeline dá atenção especial aos indicadores associados ao propósito e à vocação segundo a literatura de referência em astrologia psicológica e tradicional:
+
+- **Graus e dispositores** dos dez planetas principais (Sol, Lua, Mercúrio, Vênus, Marte, Júpiter, Saturno, Urano, Netuno e Plutão). Os graus permitem medir a atuação precisa em cada signo/casa, enquanto os dispositores tradicional e moderno contextualizam o “senhor” daquele posicionamento conforme autores clássicos (Ptolomeu, Lilly) e modernos (Dane Rudhyar, Liz Greene, Stephen Arroyo).
+- **Elementos dos dispositores (Fogo, Terra, Ar, Água)** para mapear em qual qualidade energética os dispositores tradicional e moderno se expressam, incluindo contagens agregadas e identificação dos elementos dominantes de cada fluxo dispositor.
+- **Signo, elemento e modalidade** para capturar a expressão energética de cada planeta.
+- **Casas astrológicas** para relacionar as áreas de manifestação prática.
+- **Aspectos principais** (representados pela contagem agregada) para oferecer sinais de integração ou tensão entre planetas.
+- **Temperamentos astrológicos** calculados segundo a combinação de elementos e dispositores (tradição x modernidade), entregando contagens para os quatro tipos fundamentais (colérico, sanguíneo, melancólico e fleumático), além da identificação do temperamento dominante com sugestões de profissões e desafios descritos por autores de referência.
+
+Esses indicadores de temperamento utilizam a literatura de grandes astrólogos (do renascentista Marsilio Ficino aos psicólogos-astrólogos modernos) para mapear o fluxo dispositor-planeta e enriquecer a análise vocacional com propensões, talentos e ajustes necessários.
+
+Esses parâmetros alimentam o conjunto vetorizado em `prepared_ml_data.csv`, permitindo que o modelo de machine learning considere os circuitos de dispositores e a ênfase por graus na avaliação do propósito individual.
+
+### Pacote pronto para envio
+
+Se preferir receber todos os artefatos resultantes sem executar nenhum script, utilize o utilitário `export_offline_results.py`:
+
+```bash
+python export_offline_results.py
+```
+
+O comando copia os arquivos gerados do pipeline para a pasta `offline_results/`, cria um `manifest.json` com a descrição de cada item **e** monta automaticamente o arquivo `offline_bundle.zip`, pronto para ser compartilhado localmente. Para manter o repositório livre de binários pesados, o `.zip` não é mais versionado; gere-o sempre que precisar compartilhar os resultados ou anexá-los a um PR. Use a opção `--no-zip` se quiser atualizar apenas os arquivos abertos sem recriar o ZIP.
+
+## Dependências opcionais
+
+Para substituir os dados de amostra por informações reais, instale as seguintes bibliotecas:
+
+- `pandas`
+- `scikit-learn`
+- `immanuel` + `swisseph` (para cálculo de cartas natais)
+
+Após a instalação, coloque seus arquivos reais (`person_2025_update.csv`, etc.) no diretório raiz e execute os scripts na ordem acima.
