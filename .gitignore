@@ -44,20 +44,6 @@ venv.bak/
 .coverage
 htmlcov/
 
-# Artefatos gerados pelo pipeline offline
-random_forest_model.pkl
-offline_results/random_forest_model.pkl
-offline_results/offline_bundle.zip
-offline_bundle.zip
-
-# Arquivos de exportação de repositório
-transfer/*.bundle
-transfer/*.zip
-transfer/*.b64
-!transfer/
-!transfer/README.md
-!transfer/work.bundle.b64.txt
-
 # Arquivos de IDE
 .idea/
 .vscode/
