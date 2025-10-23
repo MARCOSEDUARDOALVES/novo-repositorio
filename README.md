@@ -105,6 +105,51 @@ Quando já existir um repositório no GitHub (por exemplo, `https://github.com/M
 
 Esse fluxo garante que todo o histórico produzido aqui seja recriado localmente e enviado ao GitHub usando apenas comandos do Git Bash.
 
+## Executar a aplicação web e gerar um link de acesso
+
+O projeto possui um servidor Express que entrega os arquivos estáticos (React/Vite
+build) e imprime automaticamente os links acessíveis assim que for iniciado. O
+passo a passo abaixo funciona no Windows (Git Bash), macOS ou Linux:
+
+1. **Instale o Node.js 18 ou superior**
+   - Baixe em [https://nodejs.org/](https://nodejs.org/) e conclua a instalação.
+   - Reinicie o terminal após a instalação para garantir que `node` e `npm`
+     estejam disponíveis.
+
+2. **Instale as dependências do projeto**
+   ```bash
+   cd caminho/para/novo-repositorio
+   npm install
+   ```
+
+3. **Inicie o servidor Express**
+   ```bash
+   npm run start
+   ```
+   - O comando utiliza `server.js` para servir `index.html` e os demais ativos.
+   - No terminal será exibido `Servidor rodando em http://localhost:3000`.
+   - O servidor também lista automaticamente todos os endereços IPv4 da sua
+     máquina na mesma rede (por exemplo, `http://192.168.0.10:3000`). Esses são
+     os links que podem ser abertos em outro computador ou celular conectado à
+     mesma rede Wi-Fi.
+
+4. **(Opcional) Executar o front-end em modo desenvolvimento**
+   ```bash
+   npm run dev:client -- --host --port 5173
+   ```
+   - O Vite exibirá um endereço local (`http://localhost:5173/`) e um endereço
+     de rede (`http://seu-ip:5173/`). Abra o link indicado no navegador.
+   - Use esse modo quando quiser *hot reload* no React enquanto modifica os
+     arquivos `App.jsx`, `App.css` ou demais componentes.
+
+5. **Encerrar o servidor**
+   - Pressione `Ctrl + C` no terminal para finalizar.
+
+> 💡 Caso queira tornar o link acessível fora da sua rede local, utilize um túnel
+> seguro (por exemplo, [ngrok](https://ngrok.com/) ou o serviço de hospedagem de
+> sua preferência) apontando para a porta exibida pelo servidor (`3000` por
+> padrão).
+
 ### Se o GitHub mostrar "O Codex atualmente não permite atualizar PRs"
 
 Algumas vezes, ao abrir um Pull Request criado a partir deste ambiente, o botão
