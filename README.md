@@ -86,6 +86,8 @@ Quando já existir um repositório no GitHub (por exemplo, `https://github.com/M
    ```bash
    git remote add origin https://github.com/MARCOSEDUARDOALVES/novo-repositorio.git
    git remote -v
+   ```
+=======
 
 ```
 =======
@@ -135,6 +137,8 @@ passo a passo abaixo funciona no Windows (Git Bash), macOS ou Linux:
 
 4. **(Opcional) Executar o front-end em modo desenvolvimento (Vite)**
   ```bash
+  npm run dev
+=======
 
 =======
   npm run dev:vite
@@ -164,6 +168,7 @@ passo a passo abaixo funciona no Windows (Git Bash), macOS ou Linux:
 > `cd ~/Downloads/novo-repositorio`. Depois do `cd`, repita `ls` e confira que
 > arquivos como `package.json` e `App.jsx` estão visíveis; só então execute os
 > comandos do Vite.
+=======
 =======
 
 5. **Encerrar o servidor**
@@ -365,6 +370,11 @@ locais, ainda é possível substituir os samples manualmente:
 - `pandas`
 - `scikit-learn`
 - `immanuel` + `swisseph` (para cálculo de cartas natais)
+
+Após a instalação, você pode optar por fornecer a API online (recomendado) ou
+copiar arquivos reais (`person_2025_update.csv`, etc.) para o diretório raiz e
+executar os scripts na ordem acima.
+=======
 
 Após a instalação, você pode optar por fornecer a API online (recomendado) ou
 copiar arquivos reais (`person_2025_update.csv`, etc.) para o diretório raiz e
