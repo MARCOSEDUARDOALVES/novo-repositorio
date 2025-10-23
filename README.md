@@ -86,7 +86,11 @@ Quando já existir um repositório no GitHub (por exemplo, `https://github.com/M
    ```bash
    git remote add origin https://github.com/MARCOSEDUARDOALVES/novo-repositorio.git
    git remote -v
+
 ```
+=======
+```
+
    - Confirme que a URL correta aparece para `origin` em `fetch` e `push`.
 3. Envie tudo para o GitHub e defina o *upstream* da branch `work`:
    ```bash
@@ -131,12 +135,36 @@ passo a passo abaixo funciona no Windows (Git Bash), macOS ou Linux:
 
 4. **(Opcional) Executar o front-end em modo desenvolvimento (Vite)**
   ```bash
+
+=======
   npm run dev:vite
   ```
   - O comando já inicia o Vite em `http://localhost:5173/`, abre o navegador
     automaticamente e permite acesso externo pela rede local (`http://seu-ip:5173/`).
   - Use esse modo quando quiser *hot reload* no React enquanto modifica os
     arquivos `App.jsx`, `App.css` ou demais componentes.
+  - Se quiser continuar usando o servidor Express com recarregamento automático,
+    utilize `npm run dev:server`.
+
+> ⚠️ **Erro `npm ERR! enoent ... package.json`**
+>
+> Esse erro indica que o terminal não está dentro da pasta do projeto quando o
+> comando `npm run dev` é executado. Antes de rodar qualquer script do `npm`,
+> confirme que o caminho atual contém `package.json`:
+>
+> ```bash
+> pwd            # mostra a pasta atual
+> ls             # verifique se package.json aparece na lista
+> cd caminho/para/novo-repositorio
+> npm install
+> npm run dev
+> ```
+>
+> No Git Bash do Windows, a pasta costuma ser algo como
+> `cd ~/Downloads/novo-repositorio`. Depois do `cd`, repita `ls` e confira que
+> arquivos como `package.json` e `App.jsx` estão visíveis; só então execute os
+> comandos do Vite.
+=======
 
 5. **Encerrar o servidor**
    - Pressione `Ctrl + C` no terminal para finalizar.
@@ -342,6 +370,7 @@ Após a instalação, você pode optar por fornecer a API online (recomendado) o
 copiar arquivos reais (`person_2025_update.csv`, etc.) para o diretório raiz e
 executar os scripts na ordem acima.
 =======
+=======
     Após a instalação, abra o terminal e configure suas informações:
     ```
     git config --global user.name "Seu Nome"
@@ -444,9 +473,9 @@ executar os scripts na ordem acima.
 +- `immanuel` + `swisseph` (para cálculo de cartas natais)
 +
 +Após a instalação, coloque seus arquivos reais (`person_2025_update.csv`, etc.) no diretório raiz e execute os scripts na ordem acima.
- 
+
 EOF
 )
 Atualização inicial pelo Codex - qua, 22 de out de 2025 20:53:30
 Boot do PR do Codex - qua, 22 de out de 2025 21:10:46
- 
+
