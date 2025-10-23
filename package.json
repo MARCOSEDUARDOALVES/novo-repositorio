@@ -2,12 +2,14 @@
   "name": "madelaine",
   "version": "1.0.0",
   "description": "Projeto MADELAINE",
-  "main": "server.js",
   "type": "module",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "dev": "vite --host 0.0.0.0 --port 5173 --open",
+    "dev:server": "nodemon --watch server.js --exec \"node server.js\"",
     "dev:client": "vite",
+    "dev:vite": "npm run dev",
     "build": "vite build"
   },
   "dependencies": {
@@ -15,7 +17,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^2.10.3",
-    "lucide-react": "^0.294.0"
+    "lucide-react": "^0.294.0",
+    "clsx": "^2.1.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.22",
