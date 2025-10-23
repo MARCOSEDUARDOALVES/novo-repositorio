@@ -133,14 +133,14 @@ passo a passo abaixo funciona no Windows (Git Bash), macOS ou Linux:
      os links que podem ser abertos em outro computador ou celular conectado à
      mesma rede Wi-Fi.
 
-4. **(Opcional) Executar o front-end em modo desenvolvimento**
-   ```bash
-   npm run dev:client -- --host --port 5173
-   ```
-   - O Vite exibirá um endereço local (`http://localhost:5173/`) e um endereço
-     de rede (`http://seu-ip:5173/`). Abra o link indicado no navegador.
-   - Use esse modo quando quiser *hot reload* no React enquanto modifica os
-     arquivos `App.jsx`, `App.css` ou demais componentes.
+4. **(Opcional) Executar o front-end em modo desenvolvimento (Vite)**
+  ```bash
+  npm run dev:vite
+  ```
+  - O comando já inicia o Vite em `http://localhost:5173/`, abre o navegador
+    automaticamente e permite acesso externo pela rede local (`http://seu-ip:5173/`).
+  - Use esse modo quando quiser *hot reload* no React enquanto modifica os
+    arquivos `App.jsx`, `App.css` ou demais componentes.
 
 5. **Encerrar o servidor**
    - Pressione `Ctrl + C` no terminal para finalizar.
