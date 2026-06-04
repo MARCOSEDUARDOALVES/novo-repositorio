@@ -215,85 +215,158 @@ async def interpret_natal_endpoint(body: InterpretNatalRequest):
         pron    = pronouns(body.gender)
         context = build_chart_context(chart, include_aspects=True)
 
-        # Extrai posições para montar seções dinâmicas
-        planets = chart.get("planets", [])
-        asc = chart.get("ascendant", "")
+        # ── Mapa de regentes tradicionais + modernos ──────────────────────────
+        REGENTES = {
+            "Aries":       "Marte",
+            "Touro":       "Venus",
+            "Gemeos":      "Mercurio",
+            "Cancer":      "Lua",
+            "Leao":        "Sol",
+            "Virgem":      "Mercurio",
+            "Libra":       "Venus",
+            "Escorpiao":   "Plutao",   # moderno; tradicional: Marte
+            "Sagitario":   "Jupiter",
+            "Capricornio": "Saturno",
+            "Aquario":     "Urano",    # moderno; tradicional: Saturno
+            "Peixes":      "Netuno",   # moderno; tradicional: Jupiter
+        }
 
-        def p(name_pt):
-            for pl in planets:
-                if pl["name"] == name_pt:
-                    retro = " (Retrógrado)" if pl.get("isRetrograde") else ""
-                    return f"{pl['sign']}, Casa {pl['house']}{retro}"
-            return "—"
+        planets_list = chart.get("planets", [])
+        houses_list  = chart.get("houses",  [])
+
+        # Índice rápido: nome do planeta → dados
+        pl_idx = {pl["name"]: pl for pl in planets_list}
+
+        def pl_str(planet_name: str) -> str:
+            """Retorna 'signo, Casa N [R]' do planeta."""
+            pl = pl_idx.get(planet_name)
+            if not pl:
+                return "nao encontrado"
+            retro = " (Retr.)" if pl.get("isRetrograde") else ""
+            return f"{pl['sign']}, Casa {pl['house']}{retro}"
+
+        def dispositor_chain(sign: str, visited: set = None) -> str:
+            """Monta a cadeia de dispositores de um signo até o domicílio."""
+            if visited is None:
+                visited = set()
+            reg_name = REGENTES.get(sign)
+            if not reg_name or reg_name in visited:
+                return ""
+            visited.add(reg_name)
+            reg = pl_idx.get(reg_name)
+            if not reg:
+                return f"{reg_name} (nao calculado)"
+            retro = " Retr." if reg.get("isRetrograde") else ""
+            chain = f"{reg_name} em {reg['sign']}{retro}, Casa {reg['house']}"
+            # Verifica domicilio (para encerrar a cadeia)
+            dom_signs = {
+                "Sol": ["Leao"], "Lua": ["Cancer"], "Mercurio": ["Gemeos","Virgem"],
+                "Venus": ["Touro","Libra"], "Marte": ["Aries","Escorpiao"],
+                "Jupiter": ["Sagitario","Peixes"], "Saturno": ["Capricornio","Aquario"],
+                "Urano": ["Aquario"], "Netuno": ["Peixes"], "Plutao": ["Escorpiao"],
+            }
+            if reg["sign"] in dom_signs.get(reg_name, []):
+                return chain + " [domicilio]"
+            next_chain = dispositor_chain(reg["sign"], visited)
+            return chain + (" → " + next_chain if next_chain else "")
+
+        def planets_in_house(house_num: int) -> str:
+            """Lista planetas que estão na casa especificada."""
+            pls = [pl for pl in planets_list if pl.get("house") == house_num
+                   and pl["name"] not in ("Fortuna", "Nodo Sul")]
+            if not pls:
+                return "vazia"
+            parts = []
+            for pl in pls:
+                r = " (Retr.)" if pl.get("isRetrograde") else ""
+                parts.append(f"{pl['name']} em {pl['sign']}{r}")
+            return ", ".join(parts)
+
+        # ── Monta bloco de casas para o prompt ────────────────────────────────
+        house_blocks = []
+        HOUSE_THEMES = [
+            "identidade, corpo, mascara social (Persona de Jung)",
+            "recursos materiais, autoestima, valores — o que eu possuo e valoro",
+            "mente, comunicacao, irmaos, aprendizado — o pensamento consciente",
+            "raizes, familia, lar, mae — complexo materno e base psiquica",
+            "criatividade, romance, filhos, prazer — o Eros e expressao do ego",
+            "trabalho, saude, servico, rotina — o Id disciplinado",
+            "parceria, casamento, o Outro — projecao da Sombra (Jung)",
+            "sexualidade, morte, transformacao, legados — o inconsciente profundo",
+            "filosofia, viagens, crencas, visao de mundo — o Superego espiritual",
+            "carreira, reputacao, autoridade, pai — complexo paterno",
+            "amigos, grupos, ideais, futuro — o eu coletivo",
+            "inconsciente, isolamento, karma, espiritualidade — o retorno ao todo",
+        ]
+        for h in houses_list:
+            num  = h["number"]
+            sign = h["sign"]
+            reg  = REGENTES.get(sign, "?")
+            reg_pos = pl_str(reg)
+            chain   = dispositor_chain(sign)
+            in_h    = planets_in_house(num)
+            theme   = HOUSE_THEMES[num - 1] if num <= 12 else ""
+            house_blocks.append(
+                f"Casa {num} ({sign}) — regente: {reg} em {reg_pos}\n"
+                f"  Cadeia: {chain}\n"
+                f"  Planetas na casa: {in_h}\n"
+                f"  Tema psicologico: {theme}"
+            )
+
+        houses_text = "\n\n".join(house_blocks)
+
+        # ── Aspectos relevantes ────────────────────────────────────────────────
+        aspects_list = chart.get("aspects", [])[:10]
+        aspects_text = "\n".join([
+            f"  {a['planet_a']} {a.get('symbol','x')} {a['planet_b']} "
+            f"({a['aspect']}, orbe {a['orb']:.1f}{'R' if a.get('exact') else ''})"
+            for a in aspects_list
+        ]) or "nenhum aspecto calculado"
+
+        asc_sign = chart.get("ascendant", "?")
+        mc_sign  = chart.get("midheaven", "?")
 
         prompt = f"""{AURELIO_SYSTEM}
 
 ---
 
-## MAPA NATAL — {name.upper()}
+## MAPA NATAL COMPLETO — {name.upper()}
 
-Ascendente: {asc} | MC: {chart.get('midheaven', '')}
-Sol: {p('Sol')} | Lua: {p('Lua')} | Mercúrio: {p('Mercúrio')}
-Vênus: {p('Vênus')} | Marte: {p('Marte')} | Júpiter: {p('Júpiter')}
-Saturno: {p('Saturno')} | Urano: {p('Urano')} | Netuno: {p('Netuno')} | Plutão: {p('Plutão')}
+Ascendente: {asc_sign} | Meio do Ceu: {mc_sign}
 
-Dados completos de casas e aspectos:
-{context}
+### CASAS E DISPOSITORES:
+{houses_text}
 
----
-
-## SUA MISSÃO
-
-Elabore a interpretação astrológica profunda e personalizada do mapa de {name}.
-Estilo: Prof. Aurélio — psicologia junguiana e freudiana aplicadas à astrologia.
-Língua: português brasileiro elegante.
-
-Siga EXATAMENTE esta estrutura — um título ✦ por posição, 2-3 parágrafos densos:
-
-✦ Ascendente em {asc}
-Como {name} se apresenta ao mundo, motivação primária, máscara social (Jung). O regente do Ascendente e onde {pron['subj']} está posicionado.
-
-✦ Sol em {p('Sol')}
-Identidade central, propósito, força vital. O herói interior. O que {name} veio realizar.
-
-✦ Lua em {p('Lua')}
-Mundo emocional, inconsciente, complexo materno (Freud/Jung). Padrões afetivos herdados na infância.
-
-✦ Mercúrio em {p('Mercúrio')}
-Mente, comunicação, forma de pensar. Como {name} processa e expressa o mundo interno.
-
-✦ Vênus em {p('Vênus')}
-Amor, atração, valores, beleza. Anima/Animus (Jung). O que {name} busca e atrai nos relacionamentos.
-
-✦ Marte em {p('Marte')}
-Desejo, ação, sexualidade, assertividade. Como {name} age, luta e conquista.
-
-✦ Júpiter em {p('Júpiter')}
-Expansão, abundância, fé. Onde a fortuna se manifesta. Filosofia de vida.
-
-✦ Saturno em {p('Saturno')}
-Karma, disciplina, limitações e maturidade. Lições que {name} veio aprender.
-
-✦ Urano em {p('Urano')}
-Ruptura, genialidade, originalidade. Como {name} revoluciona padrões.
-
-✦ Netuno em {p('Netuno')}
-Espiritualidade, sonhos, dissolução. Dons espirituais e armadilhas da ilusão.
-
-✦ Plutão em {p('Plutão')}
-Transformação profunda, poder, morte e renascimento. O que precisa ser destruído para {name} renascer.
-
-✦ Síntese Integrativa
-Padrão geral do mapa — missão de alma, arquétipo dominante, ferida que cura. Mensagem final do Prof. Aurélio.
+### ASPECTOS PRINCIPAIS:
+{aspects_text}
 
 ---
 
-Regras absolutas:
-- SEMPRE cite a posição exata: "Seu Plutão em Libra na Casa 12..."
-- Use **negrito** nos conceitos-chave
-- NUNCA frases genéricas aplicáveis a qualquer pessoa
-- NUNCA se apresente — comece direto no primeiro ✦
-- Mínimo 2 parágrafos ricos por seção"""
+## SUA MISSAO — INTERPRETACAO CASA A CASA
+
+Elabore a interpretacao psicologica e astrologica profunda de {name}, **casa a casa**.
+Estilo: Prof. Aurelio — psicanalize freudiana + psicologia analitica junguiana aplicadas a astrologia.
+Lingua: portugues brasileiro elegante. Use a ortografia com acentos.
+
+ESTRUTURA OBRIGATORIA — para cada casa:
+
+**✦ Casa 1 — [signo] — [tema da casa]**
+Interprete: (1) o signo na cuspide e como molda a identidade/mascara; (2) o regente e sua posicao — o que isso significa psicologicamente; (3) a cadeia de dispositores — como a energia flui e onde termina; (4) planetas presentes na casa — se houver, como intensificam a tematica; (5) complexo freudiano ou arquetipo jungiano ativado nesta casa para {name} especificamente.
+
+Repita este padrao para todas as 12 casas.
+
+**✦ Sintese Integrativa**
+O padrao dominante do mapa: arquetipo central, complexo principal, missao de alma. A cadeia de dispositores que conecta tudo. Mensagem final do Prof. Aurelio para {name}.
+
+---
+
+REGRAS ABSOLUTAS:
+- CITE sempre posicoes exatas: "Seu Plutao em Libra na Casa 12, regendo o Ascendente Escorpiao..."
+- Mencione a CADEIA DE DISPOSITORES de cada casa com o significado psicologico
+- Use **negrito** nos conceitos-chave astrologicos e psicologicos
+- NUNCA frases genericas — cada frase deve ser impossivel de aplicar a outro mapa
+- NUNCA se apresente — comece direto na Casa 1
+- Minimo 3 paragrafos por casa"""
 
         interpretation = await generate(prompt, temperature=0.78, max_tokens=5000)
         return {
